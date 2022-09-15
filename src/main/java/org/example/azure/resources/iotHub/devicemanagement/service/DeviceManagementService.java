@@ -26,7 +26,7 @@ public class DeviceManagementService {
 
     @GET
     @Timed
-    public void getDevices(@PathParam("iotHubName") String iotHubName) throws Exception {
+    public void getDevices(@PathParam("iotHubName") String iotHubName) {
         deviceManagementBA.iotHubResourceExportDevices(iotHubName);
     }
 }

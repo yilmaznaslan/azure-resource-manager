@@ -37,8 +37,8 @@ public class IoTHubResource {
 
     @DELETE
     @Timed
-    public void deleteIoTHub(@QueryParam("iotHubResourceName") String iotHubResourceName){
-        ioTHubBA.deleteIotHub(iotHubResourceName);
+    public void deleteIoTHub(@QueryParam("iotHubName") String iotHubName){
+        ioTHubBA.deleteIotHub(iotHubName);
     }
 
 

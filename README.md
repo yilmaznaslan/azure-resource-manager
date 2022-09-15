@@ -36,7 +36,7 @@ export AZURE_CLIENT_SECRET='0077xxxxxxxxxxxxxxxxxxxxxxxxx'
 
 
 ## How to run
-In terminal run the command './gradlew run '
+./gradlew run --args='server build/resources/main/serverConfig.yml'
 
 `java -cp ":build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" -jar build/libs/all-in-one-jar-1.0-SNAPSHOT.jar`
 
@@ -63,8 +63,6 @@ java -cp ":build/classes/java/main:build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" c
 ![Azure Role Assignment](https://docs.microsoft.com/en-us/azure/includes/role-based-access-control/media/scope-levels.png)
 
 
-## How to run
-./gradlew run --args='server build/resources/main/serverConfig.yml'
 
 ## Refernece
 - https://docs.microsoft.com/en-us/java/api/overview/azure/resourcemanager-iothub-readme?view=azure-java-stable

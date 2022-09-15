@@ -1,10 +1,13 @@
 package org.example.azure.resources.storage.service;
 
 import com.codahale.metrics.annotation.Timed;
+import com.microsoft.azure.storage.StorageException;
 import org.example.azure.resources.storage.business.StorageBA;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 
 @Path("storage")
 @Produces(MediaType.APPLICATION_JSON)
@@ -18,8 +21,9 @@ public class StorageResource {
 
     @POST
     @Timed
-    public void createStorageAccount(@QueryParam("storageAccountName") String accountName) {
-        storageBA.createStorageAccount(accountName);
+    public void createStorageAccount(@QueryParam("storageAccountName") String accountName,
+                                     @QueryParam("containerName") String containerNAme) throws URISyntaxException, InvalidKeyException, StorageException {
+        storageBA.createStorageAccountAmdContainer(accountName, containerNAme);
     }
 
 }

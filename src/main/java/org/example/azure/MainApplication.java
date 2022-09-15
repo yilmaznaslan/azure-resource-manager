@@ -48,8 +48,8 @@ public class MainApplication extends Application<DefaultConfiguration> {
 
         String resourceGroupName = configuration.getResourceGroupName();
         IoTHubBA ioTHubBA = new IoTHubBA(resourceGroupName, credential, azureResourceManager, profile);
-        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, resourceGroupName);
         StorageBA storageBA = new StorageBA(resourceGroupName, azureResourceManager);
+        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, storageBA, resourceGroupName);
 
 
         final DefaultResource defaultResource = new DefaultResource(azureResourceManager);

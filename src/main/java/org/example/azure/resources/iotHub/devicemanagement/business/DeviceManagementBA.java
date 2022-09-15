@@ -13,17 +13,21 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.*;
 import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
+import org.example.azure.resources.storage.business.StorageBA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Objects;
+
+import static org.example.azure.resources.storage.business.StorageBA.storageConnectionString;
 
 
 public class DeviceManagementBA {
@@ -32,17 +36,19 @@ public class DeviceManagementBA {
 
     public static final String exportFileLocation = "/Users/yilmaznaci.aslan/azure";
     private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
-    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=yilmazteststorageaccount;AccountKey=kB0HFufBBDwEZuFYP7B+gVHcfA48n8grtiiQcKtZDsxDElyVPTwvLHOQ+qySWbKnpw8CxwP/ZKc2+AStI/AU9A==;EndpointSuffix=core.windows.net";
-    private static String containerName = "devicecontainer";
     private static boolean excludeKeys = false;
     private static String importBlobName = "devices.txt";
     private final IotHubManager iotHubManager;
     private final IoTHubBA ioTHubBA;
 
+    private final StorageBA storageBA;
+
     private final String resourceGroupName;
-    public DeviceManagementBA(IotHubManager iotHubManager, IoTHubBA ioTHubBA, String resourceGroupName) {
+
+    public DeviceManagementBA(IotHubManager iotHubManager, IoTHubBA ioTHubBA, StorageBA storageBA, String resourceGroupName) {
         this.iotHubManager = iotHubManager;
         this.ioTHubBA = ioTHubBA;
+        this.storageBA = storageBA;
         this.resourceGroupName = resourceGroupName;
     }
 
@@ -69,6 +75,7 @@ public class DeviceManagementBA {
     }
 
     public void exportDevicesToBlobFromIotHub(String iotHubName) throws Exception {
+        /*
         System.out.println("Starting export sample...");
 
 
@@ -104,25 +111,22 @@ public class DeviceManagementBA {
 
 
         System.out.println("Export job completed. Results are in " + exportFileLocation);
+
+         */
     }
 
     public void createAndImportDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount) throws Exception {
         IotHubDescription iotHubDescription = ioTHubBA.getIotHub(iotHubName);
         if (iotHubDescription != null) {
-            importDevicesToBlob(devicePrefix, deviceCount);
+            createDevicesInBlob(devicePrefix, deviceCount);
             importDevicesFromBlobToIoTHub(iotHubName);
 
         }
     }
 
-    private void importDevicesToBlob(String devicePrefix, int deviceCount) throws Exception {
-        System.out.println("Starting importing devices to blob. ");
+    private void createDevicesInBlob(String devicePrefix, int deviceCount) throws Exception {
+        LOGGER.debug("Starting to create devices in blob. ");
 
-        // Creating Azure storage container and getting its URI
-        CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
-        CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-        CloudBlobContainer container = blobClient.getContainerReference(containerName);
-        container.createIfNotExists();
 
         // Creating the list of devices to be submitted for import
         StringBuilder devicesToImport = new StringBuilder();
@@ -147,12 +151,11 @@ public class DeviceManagementBA {
         byte[] blobToImport = devicesToImport.toString().getBytes(StandardCharsets.UTF_8);
 
         // Creating the Azure storage blob and uploading the serialized string of devices
-        System.out.println("Uploading " + blobToImport.length + " bytes into Azure storage.");
+        LOGGER.info("Uploading " + blobToImport.length + " bytes into Azure storage.");
         InputStream stream = new ByteArrayInputStream(blobToImport);
-        CloudBlockBlob importBlob = container.getBlockBlobReference(importBlobName);
+        CloudBlockBlob importBlob = storageBA.getContainer().getBlockBlobReference(importBlobName);
         importBlob.deleteIfExists();
         importBlob.upload(stream, blobToImport.length);
-
     }
 
     private void importDevicesFromBlobToIoTHub(String iotHubName) throws Exception {
@@ -160,7 +163,7 @@ public class DeviceManagementBA {
         // Creating Azure storage container and getting its URI
         CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
         CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-        CloudBlobContainer container = blobClient.getContainerReference(containerName);
+        CloudBlobContainer container = blobClient.getContainerReference(storageBA.getContainer().getName());
         String containerSasUri = getContainerSasUri(container);
 
         // Starting the import job
