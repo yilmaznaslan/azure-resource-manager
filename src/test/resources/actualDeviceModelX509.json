@@ -1,0 +1,22 @@
+{
+  "id": "asd",
+  "eTag": "NjAyMjgyMTU3",
+  "status": "enabled",
+  "authentication": {
+    "symmetricKey": {
+      "primaryKey": null,
+      "secondaryKey": null
+    },
+    "x509Thumbprint": {
+      "primaryThumbprint": "DE89B7BBD215E7E47ECD372F61205712D71DD521",
+      "secondaryThumbprint": "DE89B7BBD215E7E47ECD372F61205712D71DD521"
+    },
+    "type": "selfSigned"
+  },
+  "twinETag": "AAAAAAAAAAE=",
+  "tags": {},
+  "capabilities": {
+    "iotEdge": false
+  }
+}
+

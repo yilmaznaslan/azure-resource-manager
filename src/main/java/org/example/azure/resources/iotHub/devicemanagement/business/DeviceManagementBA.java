@@ -7,6 +7,7 @@ import com.azure.resourcemanager.iothub.models.IotHubDescription;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.azure.sdk.iot.service.auth.AuthenticationMechanism;
+import com.microsoft.azure.sdk.iot.service.auth.AuthenticationType;
 import com.microsoft.azure.sdk.iot.service.exceptions.IotHubException;
 import com.microsoft.azure.sdk.iot.service.registry.*;
 import com.microsoft.azure.storage.CloudStorageAccount;
@@ -17,9 +18,7 @@ import org.example.azure.resources.storage.business.StorageBA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.time.Duration;
@@ -34,7 +33,7 @@ public class DeviceManagementBA {
 
     private static Logger LOGGER = LoggerFactory.getLogger(DeviceManagementBA.class);
 
-    public static final String exportFileLocation = "/Users/yilmaznaci.aslan/azure";
+    public String relativePathForImportedDevices = "org/example/azure/iotHub/DeviceManager/exportedDevices.json";
     private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     private static boolean excludeKeys = false;
     private static String importBlobName = "devices.txt";
@@ -74,16 +73,14 @@ public class DeviceManagementBA {
         }
     }
 
-    public void exportDevicesToBlobFromIotHub(String iotHubName) throws Exception {
-        /*
-        System.out.println("Starting export sample...");
-
+    public void getDevicesFromIotHubToBlob(String iotHubName) throws Exception {
+        LOGGER.info("Exporting devices from IoTHub to blob");
 
         CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
         CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-        CloudBlobContainer container = blobClient.getContainerReference(containerName);
-        container.createIfNotExists();
+        CloudBlobContainer container = blobClient.getContainerReference(storageBA.getContainer().getName());
         String containerSasUri = getContainerSasUri(container);
+
 
         RegistryClient registryClient = new RegistryClient(ioTHubBA.getIotHubConnectionString(iotHubName));
         RegistryJob exportJob = registryClient.exportDevices(containerSasUri, excludeKeys);
@@ -95,54 +92,58 @@ public class DeviceManagementBA {
             }
             Thread.sleep(500);
         }
+        LOGGER.info("The job for exporting devices from IoTHub to blob is completed");
 
-
-        String path = "org/example/azure/iotHub/DeviceManager/exportedDevices.json";
-
-        File filePath = new File(Objects.requireNonNull(DeviceManagementBA.class.getClassLoader().getResource(path)).getPath());
-
+        File importedDevicePath = new File(DeviceManagementBA.class.getClassLoader().getResource(relativePathForImportedDevices).getPath());
+        InputStream is = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream(relativePathForImportedDevices);
         for (ListBlobItem blobItem : container.listBlobs()) {
             if (blobItem instanceof CloudBlob) {
                 CloudBlob blob = (CloudBlob) blobItem;
-                blob.download(new FileOutputStream(exportFileLocation + blob.getName()));
-                blob.downloadToFile(filePath.getPath());
+                //blob.download(new FileOutputStream(exportFileLocation + blob.getName()));
+                String blobName = blob.getName();
+                if (blobName.equals("devices.txt")){
+                    blob.downloadToFile(importedDevicePath.getAbsolutePath());
+                    LOGGER.info("Downloading file to the path: " + importedDevicePath.getAbsolutePath());
+                    break;
+                }
             }
         }
 
-
-        System.out.println("Export job completed. Results are in " + exportFileLocation);
-
-         */
     }
 
-    public void createAndImportDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount) throws Exception {
+    public void createAndImportDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount, String authenticationType) throws Exception {
         IotHubDescription iotHubDescription = ioTHubBA.getIotHub(iotHubName);
         if (iotHubDescription != null) {
-            createDevicesInBlob(devicePrefix, deviceCount);
-            importDevicesFromBlobToIoTHub(iotHubName);
-
+            createDevicesInBlob(devicePrefix, deviceCount, authenticationType);
+            registerDevicesFromBlobToIoTHub(iotHubName);
         }
     }
 
-    private void createDevicesInBlob(String devicePrefix, int deviceCount) throws Exception {
+    private void createDevicesInBlob(String devicePrefix, int deviceCount, String authenticationType) throws Exception {
         LOGGER.debug("Starting to create devices in blob. ");
-
 
         // Creating the list of devices to be submitted for import
         StringBuilder devicesToImport = new StringBuilder();
         for (int i = 0; i < deviceCount; i++) {
             String deviceId = devicePrefix + "_" + i;
-            Device device = new Device(deviceId);
-            AuthenticationMechanism authentication = new AuthenticationMechanism(device.getSymmetricKey());
-
             ExportImportDevice deviceToAdd = new ExportImportDevice();
+            Device device = new Device(deviceId);
+            if (authenticationType.equals(AuthenticationType.SAS.name())){
+                AuthenticationMechanism authentication = new AuthenticationMechanism(device.getSymmetricKey());
+                deviceToAdd.setAuthentication(authentication);
+            } else if(authenticationType.equals(AuthenticationType.SELF_SIGNED.name())){
+                String primaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
+                String secondaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
+                AuthenticationMechanism authentication = new AuthenticationMechanism(primaryThumbprint, secondaryThumbprint);
+                deviceToAdd.setAuthentication(authentication);
+            }
+
             deviceToAdd.setId(deviceId);
-            deviceToAdd.setAuthentication(authentication);
             deviceToAdd.setStatus(DeviceStatus.Enabled);
             deviceToAdd.setImportMode(ImportMode.CreateOrUpdate);
-
             devicesToImport.append(gson.toJson(deviceToAdd));
-
             if (i < deviceCount - 1) {
                 devicesToImport.append("\r\n");
             }
@@ -158,8 +159,8 @@ public class DeviceManagementBA {
         importBlob.upload(stream, blobToImport.length);
     }
 
-    private void importDevicesFromBlobToIoTHub(String iotHubName) throws Exception {
-        LOGGER.info("Importing devices from blob to iothub : {}", iotHubName);
+    private void registerDevicesFromBlobToIoTHub(String iotHubName) throws Exception {
+        LOGGER.info("Registering devices from blob to iothub : {}", iotHubName);
         // Creating Azure storage container and getting its URI
         CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
         CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
@@ -183,7 +184,7 @@ public class DeviceManagementBA {
 
         // Checking the result of the import job
         if (importJob.getStatus() == RegistryJob.JobStatus.COMPLETED) {
-            System.out.println("Import job completed. The new devices are now added to the hub.");
+            LOGGER.info("Import job completed. The new devices are now added to the hub.");
         } else {
             System.out.println("Import job failed. Failure reason: " + importJob.getFailureReason());
         }

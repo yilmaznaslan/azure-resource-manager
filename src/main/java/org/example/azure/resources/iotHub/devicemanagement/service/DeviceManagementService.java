@@ -20,13 +20,14 @@ public class DeviceManagementService {
     @Timed
     public void registerDevicesInBulk(@PathParam("iotHubName") String iotHubName,
                                       @QueryParam("devicePrefix") String devicePrefix,
-                                      @QueryParam("deviceCount") Integer deviceCount) throws Exception {
-        deviceManagementBA.createAndImportDevicesToIotHub(iotHubName,devicePrefix, deviceCount);
+                                      @QueryParam("deviceCount") Integer deviceCount,
+                                      @QueryParam("authenticationType") String authenticationType) throws Exception {
+        deviceManagementBA.createAndImportDevicesToIotHub(iotHubName,devicePrefix, deviceCount, authenticationType);
     }
 
     @GET
     @Timed
-    public void getDevices(@PathParam("iotHubName") String iotHubName) {
-        deviceManagementBA.iotHubResourceExportDevices(iotHubName);
+    public void getDevices(@PathParam("iotHubName") String iotHubName) throws Exception {
+        deviceManagementBA.getDevicesFromIotHubToBlob(iotHubName);
     }
 }

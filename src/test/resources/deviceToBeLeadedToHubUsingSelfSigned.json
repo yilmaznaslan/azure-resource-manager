@@ -1,0 +1,13 @@
+{
+  "id": "ebike_4",
+  "importMode": "createOrUpdate",
+  "status": "Enabled",
+  "authentication": {
+    "thumbprint": {
+      "primaryThumbprint": "DE89B7BBD215E7E47ECD372F61205712D71DD521",
+      "secondaryThumbprint": "DE89B7BBD215E7E47ECD372F61205712D71DD521"
+    },
+    "type": "SELF_SIGNED"
+  }
+}
+

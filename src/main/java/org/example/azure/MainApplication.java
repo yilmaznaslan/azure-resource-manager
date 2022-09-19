@@ -10,7 +10,7 @@ import com.azure.resourcemanager.iothub.IotHubManager;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import org.example.azure.config.DefaultConfiguration;
-import org.example.azure.resourceManager.DefaultResource;
+import org.example.azure.resources.resourceManager.DefaultResource;
 import org.example.azure.resources.iotHub.devicemanagement.business.DeviceManagementBA;
 import org.example.azure.resources.iotHub.devicemanagement.service.DeviceManagementService;
 import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;

@@ -1,0 +1,21 @@
+{
+  "id": "evehicle_2",
+  "eTag": "OTQ0NDI5NjY4",
+  "status": "enabled",
+  "authentication": {
+    "symmetricKey": {
+      "primaryKey": "K3sYRbspQqeA68jlD0Nptg==",
+      "secondaryKey": "RQESRRpCN6HrBAUt9pBAgg=="
+    },
+    "x509Thumbprint": {
+      "primaryThumbprint": null,
+      "secondaryThumbprint": null
+    },
+    "type": "sas"
+  },
+  "twinETag": "AAAAAAAAAAE=",
+  "tags": {},
+  "capabilities": {
+    "iotEdge": false
+  }
+}

@@ -23,7 +23,7 @@ public class StorageResource {
     @Timed
     public void createStorageAccount(@QueryParam("storageAccountName") String accountName,
                                      @QueryParam("containerName") String containerNAme) throws URISyntaxException, InvalidKeyException, StorageException {
-        storageBA.createStorageAccountAmdContainer(accountName, containerNAme);
+        storageBA.createStorageAccountAndContainer(accountName, containerNAme);
     }
 
 }

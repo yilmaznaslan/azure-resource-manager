@@ -1,0 +1,12 @@
+{
+  "id": "evehicle_8",
+  "importMode": "createOrUpdate",
+  "status": "Enabled",
+  "authentication": {
+    "symmetricKey": {
+      "primaryKey": "suzTW01UkkMltnPecb2UsQ==",
+      "secondaryKey": "BbS0BHfzB0WU4T9cWQXLgw=="
+    },
+    "type": "SAS"
+  }
+}

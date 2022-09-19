@@ -8,7 +8,6 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import org.example.azure.resources.iotHub.devicemanagement.business.DeviceManagementBA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,15 +21,20 @@ public class StorageBA {
     public static String storageConnectionString;
     private final AzureResourceManager azureResourceManager;
     private final String resourceGroupName;
+    private String storageAccountName = "storagetestyilmaz";
+    private String containerName = "devicecontainer";
     private CloudBlobContainer container;
 
-    public StorageBA(String resourceGroupName, AzureResourceManager azureResourceManager) {
+    public StorageBA(String resourceGroupName, AzureResourceManager azureResourceManager) throws URISyntaxException, InvalidKeyException, StorageException {
         this.azureResourceManager = azureResourceManager;
         this.resourceGroupName = resourceGroupName;
+        createStorageAccountAndContainer(this.storageAccountName, this.containerName);
     }
 
-    public void createStorageAccountAmdContainer(String storageAccountName, String containerName) throws StorageException, URISyntaxException, InvalidKeyException {
+    public void createStorageAccountAndContainer(String storageAccountName, String containerName) throws StorageException, URISyntaxException, InvalidKeyException {
         LOGGER.info("Creating a storage account");
+        this.storageAccountName = storageAccountName;
+        this.containerName = containerName;
         StorageAccount storageAccount = azureResourceManager.storageAccounts().define(storageAccountName)
                 .withRegion(Region.US_EAST)
                 .withNewResourceGroup(resourceGroupName)
