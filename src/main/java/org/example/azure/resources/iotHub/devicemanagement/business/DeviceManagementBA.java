@@ -113,7 +113,7 @@ public class DeviceManagementBA {
 
     }
 
-    public void createAndImportDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount, String authenticationType) throws Exception {
+    public void createAndRegisterDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount, String authenticationType) throws Exception {
         IotHubDescription iotHubDescription = ioTHubBA.getIotHub(iotHubName);
         if (iotHubDescription != null) {
             createDevicesInBlob(devicePrefix, deviceCount, authenticationType);

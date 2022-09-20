@@ -22,7 +22,7 @@ public class DeviceManagementService {
                                       @QueryParam("devicePrefix") String devicePrefix,
                                       @QueryParam("deviceCount") Integer deviceCount,
                                       @QueryParam("authenticationType") String authenticationType) throws Exception {
-        deviceManagementBA.createAndImportDevicesToIotHub(iotHubName,devicePrefix, deviceCount, authenticationType);
+        deviceManagementBA.createAndRegisterDevicesToIotHub(iotHubName,devicePrefix, deviceCount, authenticationType);
     }
 
     @GET
