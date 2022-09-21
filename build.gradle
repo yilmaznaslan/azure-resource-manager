@@ -9,6 +9,7 @@ version '1.0-SNAPSHOT'
 mainClassName = 'org.example.azure.MainApplication'
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -27,7 +28,7 @@ dependencies {
     implementation 'com.azure:azure-core-http-netty:1.1.0'
 
     // https://mvnrepository.com/artifact/com.microsoft.azure.sdk.iot/iot-service-client
-    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:2.1.0'
+    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:patched'
 
     // https://mvnrepository.com/artifact/com.microsoft.azure/azure-storage
     implementation 'com.microsoft.azure:azure-storage:8.0.0'

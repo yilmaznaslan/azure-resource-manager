@@ -36,7 +36,7 @@ export AZURE_CLIENT_SECRET='0077xxxxxxxxxxxxxxxxxxxxxxxxx'
 
 
 ## How to run
-`./gradlew run ![img.png](img.png)--args='server build/resources/main/serverConfig.yml'`
+`./gradlew run --args='server build/resources/main/serverConfig.yml'`
 
 `java -cp ":build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" -jar build/libs/all-in-one-jar-1.0-SNAPSHOT.jar`
 

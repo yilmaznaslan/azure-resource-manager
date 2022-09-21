@@ -133,7 +133,7 @@ public class DeviceManagementBA {
             if (authenticationType.equals(AuthenticationType.SAS.name())){
                 AuthenticationMechanism authentication = new AuthenticationMechanism(device.getSymmetricKey());
                 deviceToAdd.setAuthentication(authentication);
-            } else if(authenticationType.equals(AuthenticationType.SELF_SIGNED.name())){
+            } else if(authenticationType.equals(AuthenticationType.selfSigned.name())){
                 String primaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 String secondaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 AuthenticationMechanism authentication = new AuthenticationMechanism(primaryThumbprint, secondaryThumbprint);
@@ -186,7 +186,7 @@ public class DeviceManagementBA {
         if (importJob.getStatus() == RegistryJob.JobStatus.COMPLETED) {
             LOGGER.info("Import job completed. The new devices are now added to the hub.");
         } else {
-            System.out.println("Import job failed. Failure reason: " + importJob.getFailureReason());
+            LOGGER.error("Import job failed. Failure reason: " + importJob.getFailureReason());
         }
 
         //Cleaning up the blob
@@ -198,6 +198,7 @@ public class DeviceManagementBA {
             }
         }
          */
+
     }
 
     private String getContainerSasUri(CloudBlobContainer container) throws InvalidKeyException, StorageException {
