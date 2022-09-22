@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class MainApplication extends Application<DefaultConfiguration> {
 
     private static Logger LOGGER = LoggerFactory.getLogger(MainApplication.class);
-    public static String RESOURCE_GROUP_NAME = "yilmaz_ResourceGroup";
+    public static String RESOURCE_GROUP_NAME;
     public static void main(String[] args) throws Exception {
         new MainApplication().run(args);
     }
@@ -34,6 +34,7 @@ public class MainApplication extends Application<DefaultConfiguration> {
     @Override
     public void run(DefaultConfiguration configuration, Environment environment) throws Exception {
 
+        RESOURCE_GROUP_NAME = configuration.getResourceGroupName();
         final AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
         final TokenCredential credential = new DefaultAzureCredentialBuilder()
                 .authorityHost(profile.getEnvironment().getActiveDirectoryEndpoint())

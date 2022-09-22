@@ -54,7 +54,7 @@ public class DefaultResource {
 
     private void createIoTHub(String iotHubName){
         LOGGER.info("Creating IoTHubResource");
-
+        // ToDo Creating new IoT hub with the same name simply restores. It should be actually brand new ?
         String pathToIotHubResourceTemplate = "org/example/azure/iotHub/ResourceManager/iotHubResourceTemplate.json";
         File filePath = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(pathToIotHubResourceTemplate)).getPath());
         try(InputStream templatein = new BufferedInputStream(new FileInputStream( filePath));
