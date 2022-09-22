@@ -27,8 +27,8 @@ dependencies {
     implementation 'com.azure:azure-core-management:1.7.0'
     implementation 'com.azure:azure-core-http-netty:1.1.0'
 
-    // https://mvnrepository.com/artifact/com.microsoft.azure.sdk.iot/iot-service-client
-    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:patched'
+    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:patched_2'
+    implementation 'com.microsoft.azure.sdk.iot:iot-device-client:2.1.1'
 
     // https://mvnrepository.com/artifact/com.microsoft.azure/azure-storage
     implementation 'com.microsoft.azure:azure-storage:8.0.0'
@@ -45,6 +45,7 @@ dependencies {
 // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation 'commons-io:commons-io:2.6'
     implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation 'org.projectlombok:lombok:1.18.22'
 
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'

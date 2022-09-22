@@ -21,12 +21,7 @@ public class IoTHubResource {
         this.ioTHubBA = ioTHubBA;
     }
 
-    @POST
-    @Timed
-    public Response createIoTHub(@QueryParam("iotHubName") String iotHubName){
-        ioTHubBA.createIoTHub(iotHubName);
-        return Response.accepted().build();
-    }
+
 
     @GET
     @Timed

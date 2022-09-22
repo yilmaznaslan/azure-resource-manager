@@ -54,7 +54,7 @@ java -cp ":build/classes/java/main:build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" c
 
 #### Device Identity Management
 
-##### Importing device identities to IoT HUB a.k.a Device Registry in Bulk
+##### Importing deviceBA identities to IoT HUB a.k.a Device Registry in Bulk
 
 
 

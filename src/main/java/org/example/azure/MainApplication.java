@@ -17,13 +17,15 @@ import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
 import org.example.azure.resources.iotHub.resourceManager.service.IoTHubResource;
 import org.example.azure.resources.storage.business.StorageBA;
 import org.example.azure.resources.storage.service.StorageResource;
+import org.example.azure.resources.iotHub.simulator.DeviceBA;
+import org.example.azure.resources.iotHub.simulator.DeviceSimulatorResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MainApplication extends Application<DefaultConfiguration> {
 
     private static Logger LOGGER = LoggerFactory.getLogger(MainApplication.class);
-
+    public static String RESOURCE_GROUP_NAME = "yilmaz_ResourceGroup";
     public static void main(String[] args) throws Exception {
         new MainApplication().run(args);
     }
@@ -47,16 +49,20 @@ public class MainApplication extends Application<DefaultConfiguration> {
         IotHubManager iotHubManager = IotHubManager.authenticate(credential, profile);
 
         String resourceGroupName = configuration.getResourceGroupName();
-        IoTHubBA ioTHubBA = new IoTHubBA(resourceGroupName, credential, azureResourceManager, profile);
+        IoTHubBA ioTHubBA = new IoTHubBA(credential, profile);
         StorageBA storageBA = new StorageBA(resourceGroupName, azureResourceManager);
         DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, storageBA, resourceGroupName);
 
+        DeviceBA deviceBA = new DeviceBA();
+        DeviceSimulatorResource deviceSimulatorResource = new DeviceSimulatorResource(deviceBA);
 
         final DefaultResource defaultResource = new DefaultResource(azureResourceManager);
         final IoTHubResource ioTHubResource = new IoTHubResource(ioTHubBA);
         final DeviceManagementService deviceManagementService = new DeviceManagementService(deviceManagementBA);
         StorageResource storageResource = new StorageResource(storageBA);
 
+
+        environment.jersey().register(deviceSimulatorResource);
         environment.jersey().register(defaultResource);
         environment.jersey().register(ioTHubResource);
         environment.jersey().register(deviceManagementService);
