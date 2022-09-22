@@ -8,11 +8,17 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 public class StorageBA {
@@ -65,6 +71,26 @@ public class StorageBA {
             LOGGER.info("Container does not exist, creating it");
             container.create();
         }
+    }
+
+    public String getContainerSasUri() throws InvalidKeyException, StorageException {
+        // Set the expiry time and permissions for the container.
+        // In this case no start time is specified, so the shared access signature becomes valid immediately.
+        SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
+        Date expirationDate = Date.from(Instant.now().plus(Duration.ofDays(1)));
+        sasConstraints.setSharedAccessExpiryTime(expirationDate);
+        EnumSet<SharedAccessBlobPermissions> permissions = EnumSet.of(
+                SharedAccessBlobPermissions.WRITE,
+                SharedAccessBlobPermissions.LIST,
+                SharedAccessBlobPermissions.READ,
+                SharedAccessBlobPermissions.DELETE);
+        sasConstraints.setPermissions(permissions);
+
+        // Generate the shared access signature on the container, setting the constraints directly on the signature.
+        String sasContainerToken = container.generateSharedAccessSignature(sasConstraints, null);
+
+        // Return the URI string for the container, including the SAS token.
+        return container.getUri() + "?" + sasContainerToken;
     }
 
     public CloudBlobContainer getContainer() {

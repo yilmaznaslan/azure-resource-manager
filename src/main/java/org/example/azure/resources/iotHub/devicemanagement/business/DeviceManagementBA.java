@@ -51,6 +51,7 @@ public class DeviceManagementBA {
         this.resourceGroupName = resourceGroupName;
     }
 
+    //ToDO The exportDevicesWithResponse might not work. Check if it works
     public Object iotHubResourceExportDevices(String iotHubName) {
         return iotHubManager
                 .iotHubResources()
@@ -76,13 +77,8 @@ public class DeviceManagementBA {
     public void getDevicesFromIotHubToBlob(String iotHubName) throws Exception {
         LOGGER.info("Exporting devices from IoTHub to blob");
 
-        CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
-        CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-        CloudBlobContainer container = blobClient.getContainerReference(storageBA.getContainer().getName());
-        String containerSasUri = getContainerSasUri(container);
-
-
         RegistryClient registryClient = new RegistryClient(ioTHubBA.getIotHubConnectionString(iotHubName));
+        String containerSasUri = storageBA.getContainerSasUri();
         RegistryJob exportJob = registryClient.exportDevices(containerSasUri, excludeKeys);
 
         while (true) {
@@ -98,7 +94,7 @@ public class DeviceManagementBA {
         InputStream is = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream(relativePathForImportedDevices);
-        for (ListBlobItem blobItem : container.listBlobs()) {
+        for (ListBlobItem blobItem : storageBA.getContainer().listBlobs()) {
             if (blobItem instanceof CloudBlob) {
                 CloudBlob blob = (CloudBlob) blobItem;
                 //blob.download(new FileOutputStream(exportFileLocation + blob.getName()));
@@ -133,10 +129,15 @@ public class DeviceManagementBA {
             if (authenticationType.equals(AuthenticationType.SAS.name())){
                 AuthenticationMechanism authentication = new AuthenticationMechanism(device.getSymmetricKey());
                 deviceToAdd.setAuthentication(authentication);
-            } else if(authenticationType.equals(AuthenticationType.selfSigned.name())){
+            }
+            if(authenticationType.equals(AuthenticationType.SELF_SIGNED.name())){
                 String primaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 String secondaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 AuthenticationMechanism authentication = new AuthenticationMechanism(primaryThumbprint, secondaryThumbprint);
+                deviceToAdd.setAuthentication(authentication);
+            }
+            if(authenticationType.equals(AuthenticationType.CERTIFICATE_AUTHORITY.name())){
+                AuthenticationMechanism authentication = new AuthenticationMechanism(AuthenticationType.CERTIFICATE_AUTHORITY);
                 deviceToAdd.setAuthentication(authentication);
             }
 
@@ -161,15 +162,11 @@ public class DeviceManagementBA {
 
     private void registerDevicesFromBlobToIoTHub(String iotHubName) throws Exception {
         LOGGER.info("Registering devices from blob to iothub : {}", iotHubName);
-        // Creating Azure storage container and getting its URI
-        CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
-        CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-        CloudBlobContainer container = blobClient.getContainerReference(storageBA.getContainer().getName());
-        String containerSasUri = getContainerSasUri(container);
 
-        // Starting the import job
+        // Create and start the import job
         String iotHubConnectionString = ioTHubBA.getIotHubConnectionString(iotHubName);
         RegistryClient registryClient = new RegistryClient(iotHubConnectionString);
+        String containerSasUri = storageBA.getContainerSasUri();
         RegistryJob importJob = registryClient.importDevices(containerSasUri, containerSasUri);
 
         // Waiting for the import job to complete
@@ -199,26 +196,6 @@ public class DeviceManagementBA {
         }
          */
 
-    }
-
-    private String getContainerSasUri(CloudBlobContainer container) throws InvalidKeyException, StorageException {
-        // Set the expiry time and permissions for the container.
-        // In this case no start time is specified, so the shared access signature becomes valid immediately.
-        SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
-        Date expirationDate = Date.from(Instant.now().plus(Duration.ofDays(1)));
-        sasConstraints.setSharedAccessExpiryTime(expirationDate);
-        EnumSet<SharedAccessBlobPermissions> permissions = EnumSet.of(
-                SharedAccessBlobPermissions.WRITE,
-                SharedAccessBlobPermissions.LIST,
-                SharedAccessBlobPermissions.READ,
-                SharedAccessBlobPermissions.DELETE);
-        sasConstraints.setPermissions(permissions);
-
-        // Generate the shared access signature on the container, setting the constraints directly on the signature.
-        String sasContainerToken = container.generateSharedAccessSignature(sasConstraints, null);
-
-        // Return the URI string for the container, including the SAS token.
-        return container.getUri() + "?" + sasContainerToken;
     }
 
 }
