@@ -16,7 +16,7 @@ public class DeviceManagementService {
         this.deviceManagementBA = deviceManagementBA;
     }
 
-    @POST
+    //@POST
     @Timed
     public void registerDevicesInBulk(@PathParam("iotHubName") String iotHubName,
                                       @QueryParam("devicePrefix") String devicePrefix,
@@ -24,6 +24,13 @@ public class DeviceManagementService {
                                       @QueryParam("authenticationType") String authenticationType) throws Exception {
         deviceManagementBA.createAndRegisterDevicesToIotHub(iotHubName,devicePrefix, deviceCount, authenticationType);
     }
+
+    @POST
+    @Timed
+    public void registerSingleDevice(@QueryParam("deviceId") String deviceId) throws Exception {
+        deviceManagementBA.registerSingleDevice(deviceId);
+    }
+
 
     @GET
     @Timed

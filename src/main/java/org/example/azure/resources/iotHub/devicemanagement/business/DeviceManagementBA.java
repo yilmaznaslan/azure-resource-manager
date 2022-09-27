@@ -3,30 +3,29 @@ package org.example.azure.resources.iotHub.devicemanagement.business;
 import com.azure.core.util.Context;
 import com.azure.resourcemanager.iothub.IotHubManager;
 import com.azure.resourcemanager.iothub.models.ExportDevicesRequest;
-import com.azure.resourcemanager.iothub.models.IotHubDescription;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.azure.sdk.iot.service.twin.Twin;
+import com.microsoft.azure.sdk.iot.service.twin.TwinClient;
+import com.microsoft.azure.sdk.iot.service.twin.TwinCollection;
 import com.microsoft.azure.sdk.iot.service.auth.AuthenticationMechanism;
 import com.microsoft.azure.sdk.iot.service.auth.AuthenticationType;
 import com.microsoft.azure.sdk.iot.service.exceptions.IotHubException;
 import com.microsoft.azure.sdk.iot.service.registry.*;
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.*;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.ListBlobItem;
 import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
 import org.example.azure.resources.storage.business.StorageBA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
-import java.util.EnumSet;
-
-import static org.example.azure.resources.storage.business.StorageBA.storageConnectionString;
+import java.util.HashMap;
 
 
 public class DeviceManagementBA {
@@ -40,15 +39,16 @@ public class DeviceManagementBA {
     private final IotHubManager iotHubManager;
     private final IoTHubBA ioTHubBA;
 
+    private final String iotHubConnectionString;
     private final StorageBA storageBA;
-
     private final String resourceGroupName;
 
-    public DeviceManagementBA(IotHubManager iotHubManager, IoTHubBA ioTHubBA, StorageBA storageBA, String resourceGroupName) {
+    public DeviceManagementBA(IotHubManager iotHubManager, IoTHubBA ioTHubBA, StorageBA storageBA, String resourceGroupName, String iotHubConnectionString) {
         this.iotHubManager = iotHubManager;
         this.ioTHubBA = ioTHubBA;
         this.storageBA = storageBA;
         this.resourceGroupName = resourceGroupName;
+        this.iotHubConnectionString = iotHubConnectionString;
     }
 
     //ToDO The exportDevicesWithResponse might not work. Check if it works
@@ -62,13 +62,32 @@ public class DeviceManagementBA {
                         Context.NONE);
     }
 
-    public void addSingleDevice(String iotHubName, String deviceId) {
-        RegistryClient registryClient = new RegistryClient(ioTHubBA.getIotHubConnectionString(iotHubName));
+
+    public void patchDeviceTwin(String deviceId) throws IOException, IotHubException {
+
+        TwinClient twinClient = new TwinClient(iotHubConnectionString);
+        Twin twin = twinClient.get(deviceId);
+        TwinCollection twinCollection = new TwinCollection();
+        twinCollection.put("customerId", "null");
+        twinCollection.put("country", "germany");
+        twinCollection.put("SoftwareId", "xe123");
+        twin.setTags(twinCollection);
+        twinClient.patch(twin);
+
+    }
+
+    public void registerSingleDevice(String deviceId) {
+        RegistryClient registryClient = new RegistryClient(iotHubConnectionString);
         Device device = new Device(deviceId);
+
         try {
             device = registryClient.addDevice(device);
             System.out.println("Device created: " + device.getDeviceId());
             System.out.println("Device key: " + device.getPrimaryKey());
+            HashMap<String, String> tags  = new HashMap<String, String>();
+            tags.put("countery", "germany");
+            patchDeviceTwin(device.getDeviceId());
+
         } catch (IotHubException | IOException iote) {
             iote.printStackTrace();
         }
@@ -77,7 +96,7 @@ public class DeviceManagementBA {
     public void getDevicesFromIotHubToBlob(String iotHubName) throws Exception {
         LOGGER.info("Exporting devices from IoTHub to blob");
 
-        RegistryClient registryClient = new RegistryClient(ioTHubBA.getIotHubConnectionString(iotHubName));
+        RegistryClient registryClient = new RegistryClient(iotHubConnectionString);
         String containerSasUri = storageBA.getContainerSasUri();
         RegistryJob exportJob = registryClient.exportDevices(containerSasUri, excludeKeys);
 
@@ -99,7 +118,7 @@ public class DeviceManagementBA {
                 CloudBlob blob = (CloudBlob) blobItem;
                 //blob.download(new FileOutputStream(exportFileLocation + blob.getName()));
                 String blobName = blob.getName();
-                if (blobName.equals("devices.txt")){
+                if (blobName.equals("devices.txt")) {
                     blob.downloadToFile(importedDevicePath.getAbsolutePath());
                     LOGGER.info("Downloading file to the path: " + importedDevicePath.getAbsolutePath());
                     break;
@@ -110,11 +129,8 @@ public class DeviceManagementBA {
     }
 
     public void createAndRegisterDevicesToIotHub(String iotHubName, String devicePrefix, int deviceCount, String authenticationType) throws Exception {
-        IotHubDescription iotHubDescription = ioTHubBA.getIotHub(iotHubName);
-        if (iotHubDescription != null) {
-            createDevicesInBlob(devicePrefix, deviceCount, authenticationType);
-            registerDevicesFromBlobToIoTHub(iotHubName);
-        }
+        createDevicesInBlob(devicePrefix, deviceCount, authenticationType);
+        registerDevicesFromBlobToIoTHub(iotHubName);
     }
 
     private void createDevicesInBlob(String devicePrefix, int deviceCount, String authenticationType) throws Exception {
@@ -123,24 +139,32 @@ public class DeviceManagementBA {
         // Creating the list of devices to be submitted for import
         StringBuilder devicesToImport = new StringBuilder();
         for (int i = 0; i < deviceCount; i++) {
-            String deviceId = devicePrefix + "_" + i;
             ExportImportDevice deviceToAdd = new ExportImportDevice();
-            Device device = new Device(deviceId);
-            if (authenticationType.equals(AuthenticationType.SAS.name())){
+            TwinCollection twinCollection = new TwinCollection();
+            twinCollection.put("customerId", "null");
+            twinCollection.put("country", "germany");
+            twinCollection.put("SoftwareId", "xe123");
+            deviceToAdd.setTags(twinCollection);
+            String deviceId = devicePrefix + "_" + i;
+
+
+            if (authenticationType.equals(AuthenticationType.SAS.name())) {
+                Device device = new Device(deviceId);
                 AuthenticationMechanism authentication = new AuthenticationMechanism(device.getSymmetricKey());
                 deviceToAdd.setAuthentication(authentication);
             }
-            if(authenticationType.equals(AuthenticationType.SELF_SIGNED.name())){
+            if (authenticationType.equals(AuthenticationType.SELF_SIGNED.name())) {
                 String primaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 String secondaryThumbprint = "DE89B7BBD215E7E47ECD372F61205712D71DD521";
                 AuthenticationMechanism authentication = new AuthenticationMechanism(primaryThumbprint, secondaryThumbprint);
                 deviceToAdd.setAuthentication(authentication);
             }
-            if(authenticationType.equals(AuthenticationType.CERTIFICATE_AUTHORITY.name())){
+            if (authenticationType.equals(AuthenticationType.CERTIFICATE_AUTHORITY.name())) {
                 AuthenticationMechanism authentication = new AuthenticationMechanism(AuthenticationType.CERTIFICATE_AUTHORITY);
                 deviceToAdd.setAuthentication(authentication);
             }
 
+            //deviceToAdd.setDesiredProperties();
             deviceToAdd.setId(deviceId);
             deviceToAdd.setStatus(DeviceStatus.Enabled);
             deviceToAdd.setImportMode(ImportMode.CreateOrUpdate);
@@ -164,7 +188,6 @@ public class DeviceManagementBA {
         LOGGER.info("Registering devices from blob to iothub : {}", iotHubName);
 
         // Create and start the import job
-        String iotHubConnectionString = ioTHubBA.getIotHubConnectionString(iotHubName);
         RegistryClient registryClient = new RegistryClient(iotHubConnectionString);
         String containerSasUri = storageBA.getContainerSasUri();
         RegistryJob importJob = registryClient.importDevices(containerSasUri, containerSasUri);

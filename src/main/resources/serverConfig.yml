@@ -1,3 +1,2 @@
-firstName: "John"
-lastName: "Doe"
-resourceGroupName: "yilmaz_ResourceGroup"
+iotHubResourceGroupName: "ttn-to-azure-iot-central"
+storageAccountsResourceGroupName: "ttn-to-azure-iot-central"

@@ -8,36 +8,25 @@ import javax.validation.constraints.NotEmpty;
 public class DefaultConfiguration extends Configuration {
 
     @NotEmpty
-    private String firstName;
+    private String iotHubResourceGroupName;
 
     @NotEmpty
-    private String lastName;
+    private String storageAccountsResourceGroupName;
 
-    @NotEmpty
-    private String resourceGroupName;
 
-    @JsonProperty
-    public String getResourceGroupName(){
-        return this.resourceGroupName;
+    public String getIotHubResourceGroupName(){
+        return this.iotHubResourceGroupName;
     }
 
-    @JsonProperty
-    public String getFirstName() {
-        return firstName;
+    public void setIotHubResourceGroupName(String iotHubResourceGroupName) {
+        this.iotHubResourceGroupName = iotHubResourceGroupName;
     }
 
-    @JsonProperty
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public String getStorageAccountsResourceGroupName() {
+        return storageAccountsResourceGroupName;
     }
 
-    @JsonProperty
-    public String getLastName() {
-        return lastName;
-    }
-
-    @JsonProperty
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setStorageAccountsResourceGroupName(String storageAccountsResourceGroupName) {
+        this.storageAccountsResourceGroupName = storageAccountsResourceGroupName;
     }
 }

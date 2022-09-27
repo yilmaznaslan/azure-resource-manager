@@ -46,8 +46,13 @@ java -cp ":build/classes/java/main:build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" c
 
 java -cp ":build/classes/java/main:build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" com.maibornwolff.azure.iotHub.ResourceManager
 
+## Managing device data
+### Routing device data in Azure IoT Hub using DeviceTwin
 
 
+## How to monitor device telemetry data
+
+There are multiple ways to monitor device telemetry data
 ## IoT Hub
 
 ### Device Management
@@ -64,6 +69,6 @@ java -cp ":build/classes/java/main:build/libs/all-in-one-jar-1.0-SNAPSHOT.jar" c
 
 
 
-## Refernece
+## Reference
 - https://docs.microsoft.com/en-us/java/api/overview/azure/resourcemanager-iothub-readme?view=azure-java-stable
 - https://www.inkoop.io/blog/how-to-get-azure-api-credentials/

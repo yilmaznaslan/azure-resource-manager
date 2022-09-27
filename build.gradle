@@ -22,12 +22,11 @@ dependencies {
 
     // Used for TokenCredential Implementations
     implementation 'com.azure:azure-identity:1.5.3'
-    //implementation 'com.azure:azure-core:1.30.0'
 
     implementation 'com.azure:azure-core-management:1.7.0'
     implementation 'com.azure:azure-core-http-netty:1.1.0'
 
-    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:patched_2'
+    implementation 'com.microsoft.azure.sdk.iot:iot-service-client:twinFix_v1'
     implementation 'com.microsoft.azure.sdk.iot:iot-device-client:2.1.1'
 
     // https://mvnrepository.com/artifact/com.microsoft.azure/azure-storage

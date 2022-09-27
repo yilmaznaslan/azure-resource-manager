@@ -2,6 +2,7 @@ package org.example.azure.resources.iotHub.simulator;
 
 import com.microsoft.azure.sdk.iot.device.DeviceClient;
 import com.microsoft.azure.sdk.iot.device.IotHubClientProtocol;
+import com.microsoft.azure.sdk.iot.device.IotHubMessageResult;
 import com.microsoft.azure.sdk.iot.device.Message;
 import com.microsoft.azure.sdk.iot.device.exceptions.IotHubClientException;
 import lombok.SneakyThrows;
@@ -28,7 +29,7 @@ public class DeviceBA {
     {
         System.out.println("You hey");
         // ToDo this should be also automated !
-        String deviceConnectionString = "HostName=smartIoTHubYilmaz.azure-devices.net;DeviceId=evehicle_1;SharedAccessKey=TjkVbyhoIr+0Kcj8m0B85A==";
+        String deviceConnectionString = "HostName=smartIoTHubYilmaz.azure-devices.net;DeviceId=evehicle_1;SharedAccessKey=vHJyf+qGsNCxavyl1pV6IA==";
         this.deviceClient = new DeviceClient(deviceConnectionString, protocol);
 
         deviceClient.setConnectionStatusChangeCallback((context) -> {
@@ -72,7 +73,9 @@ public class DeviceBA {
         message.setContentType("application/json");
 
         deviceClient.sendEventAsync(message, new MessageSentCallback(), message);
-        LOGGER.info("Telemetry: Sent - {\"{}\": {}°C} with message Id {}.", telemetryName, temperature, message.getMessageId());
+        MessageReceivedCallback callback = new MessageReceivedCallback();
+        deviceClient.setMessageCallback(callback, null);
+        //LOGGER.info("Telemetry: Sent - {\"{}\": {}°C} with message Id {}.", telemetryName, temperature, message.getMessageId());
         //temperatureReadings.put(new Date(), temperature);
     }
 
@@ -86,4 +89,21 @@ public class DeviceBA {
             LOGGER.info("Telemetry - Response from IoT Hub: message Id={}, status={}", msg.getMessageId(), exception == null ? OK : exception.getStatusCode());
         }
     }
+
+
+    /**
+     * The callback to be invoked when a telemetry response is received from IoT Hub.
+     */
+    private static class MessageReceivedCallback implements com.microsoft.azure.sdk.iot.device.MessageCallback {
+
+        @Override
+        public IotHubMessageResult onCloudToDeviceMessageReceived(Message message, Object callbackContext) {
+            Message msg = (Message) callbackContext;
+            LOGGER.info("Message recevied from cloud: message Id={}, status={}", msg.getMessageId());
+            System.out.println("Received message with content: " + new String(msg.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET));
+            return IotHubMessageResult.COMPLETE;
+        }
+    }
+
+
 }

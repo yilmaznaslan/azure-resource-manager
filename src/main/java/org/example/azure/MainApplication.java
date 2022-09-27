@@ -10,12 +10,13 @@ import com.azure.resourcemanager.iothub.IotHubManager;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import org.example.azure.config.DefaultConfiguration;
-import org.example.azure.resources.resourceManager.DefaultResource;
+import org.example.azure.resources.iotHub.resourceManager.business.IoTHubResourceManager;
 import org.example.azure.resources.iotHub.devicemanagement.business.DeviceManagementBA;
 import org.example.azure.resources.iotHub.devicemanagement.service.DeviceManagementService;
 import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
 import org.example.azure.resources.iotHub.resourceManager.service.IoTHubResource;
 import org.example.azure.resources.storage.business.StorageBA;
+import org.example.azure.resources.storage.business.StorageResourceManager;
 import org.example.azure.resources.storage.service.StorageResource;
 import org.example.azure.resources.iotHub.simulator.DeviceBA;
 import org.example.azure.resources.iotHub.simulator.DeviceSimulatorResource;
@@ -26,7 +27,11 @@ public class MainApplication extends Application<DefaultConfiguration> {
 
     private static Logger LOGGER = LoggerFactory.getLogger(MainApplication.class);
     public static String RESOURCE_GROUP_NAME;
+    public static String STORAGE_ACCOUNT_CONNECTION_STRING;
+    public static String IOTHUB_CONNECTION_STRING;
     public static void main(String[] args) throws Exception {
+        STORAGE_ACCOUNT_CONNECTION_STRING = System.getenv("STORAGE_ACCOUNT_CONNECTION_STRING");
+        IOTHUB_CONNECTION_STRING = System.getenv("IOTHUB_CONNECTION_STRING");
         new MainApplication().run(args);
     }
 
@@ -34,7 +39,7 @@ public class MainApplication extends Application<DefaultConfiguration> {
     @Override
     public void run(DefaultConfiguration configuration, Environment environment) throws Exception {
 
-        RESOURCE_GROUP_NAME = configuration.getResourceGroupName();
+        RESOURCE_GROUP_NAME = configuration.getIotHubResourceGroupName();
         final AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
         final TokenCredential credential = new DefaultAzureCredentialBuilder()
                 .authorityHost(profile.getEnvironment().getActiveDirectoryEndpoint())
@@ -49,20 +54,23 @@ public class MainApplication extends Application<DefaultConfiguration> {
 
         IotHubManager iotHubManager = IotHubManager.authenticate(credential, profile);
 
-        String resourceGroupName = configuration.getResourceGroupName();
+        String resourceGroupName = configuration.getIotHubResourceGroupName();
         IoTHubBA ioTHubBA = new IoTHubBA(credential, profile);
-        StorageBA storageBA = new StorageBA(resourceGroupName, azureResourceManager);
-        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, storageBA, resourceGroupName);
-
+        StorageBA storageBA = new StorageBA(STORAGE_ACCOUNT_CONNECTION_STRING);
+        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, storageBA, resourceGroupName, IOTHUB_CONNECTION_STRING);
         DeviceBA deviceBA = new DeviceBA();
+
+        StorageResourceManager storageResourceManager = new StorageResourceManager(resourceGroupName, azureResourceManager);
+
+
+        // Create resources
         DeviceSimulatorResource deviceSimulatorResource = new DeviceSimulatorResource(deviceBA);
+        IoTHubResourceManager defaultResource = new IoTHubResourceManager(azureResourceManager);
+        IoTHubResource ioTHubResource = new IoTHubResource(ioTHubBA);
+        DeviceManagementService deviceManagementService = new DeviceManagementService(deviceManagementBA);
+        StorageResource storageResource = new StorageResource(storageResourceManager);
 
-        final DefaultResource defaultResource = new DefaultResource(azureResourceManager);
-        final IoTHubResource ioTHubResource = new IoTHubResource(ioTHubBA);
-        final DeviceManagementService deviceManagementService = new DeviceManagementService(deviceManagementBA);
-        StorageResource storageResource = new StorageResource(storageBA);
-
-
+        // Register resources
         environment.jersey().register(deviceSimulatorResource);
         environment.jersey().register(defaultResource);
         environment.jersey().register(ioTHubResource);

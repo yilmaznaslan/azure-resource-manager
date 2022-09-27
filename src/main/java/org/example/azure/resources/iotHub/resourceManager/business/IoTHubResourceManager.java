@@ -1,11 +1,10 @@
-package org.example.azure.resources.resourceManager;
+package org.example.azure.resources.iotHub.resourceManager.business;
 
 import com.azure.core.management.Region;
 import com.azure.resourcemanager.AzureResourceManager;
 import com.azure.resourcemanager.resources.models.Deployment;
 import com.azure.resourcemanager.resources.models.DeploymentMode;
 import com.azure.resourcemanager.resources.models.ResourceGroup;
-import com.codahale.metrics.annotation.Timed;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,13 +23,13 @@ import static org.example.azure.MainApplication.RESOURCE_GROUP_NAME;
 @Path("/azure/resources")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class DefaultResource {
-    private static Logger LOGGER = LoggerFactory.getLogger(DefaultResource.class);
+public class IoTHubResourceManager {
+    private static Logger LOGGER = LoggerFactory.getLogger(IoTHubResourceManager.class);
 
     private final AzureResourceManager azureResourceManager;
 
 
-    public DefaultResource(AzureResourceManager azureResourceManager) {
+    public IoTHubResourceManager(AzureResourceManager azureResourceManager) {
         this.azureResourceManager = azureResourceManager;
     }
 
