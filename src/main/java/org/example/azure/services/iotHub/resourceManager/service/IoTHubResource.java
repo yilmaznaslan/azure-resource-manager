@@ -1,14 +1,11 @@
-package org.example.azure.resources.iotHub.resourceManager.service;
+package org.example.azure.services.iotHub.resourceManager.service;
 
 import com.azure.resourcemanager.iothub.fluent.models.IotHubDescriptionInner;
-import com.azure.resourcemanager.iothub.models.IotHubDescription;
-import com.azure.resourcemanager.iothub.models.IotHubProperties;
 import com.codahale.metrics.annotation.Timed;
-import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
+import org.example.azure.services.iotHub.resourceManager.business.IoTHubBA;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/iothub")

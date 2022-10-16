@@ -1,4 +1,4 @@
-package org.example.azure.resources.iotHub.devicemanagement.model;
+package org.example.azure.services.iotHub.devicemanagement.model;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;

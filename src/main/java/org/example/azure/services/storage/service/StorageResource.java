@@ -1,8 +1,8 @@
-package org.example.azure.resources.storage.service;
+package org.example.azure.services.storage.service;
 
 import com.codahale.metrics.annotation.Timed;
 import com.microsoft.azure.storage.StorageException;
-import org.example.azure.resources.storage.business.StorageResourceManager;
+import org.example.azure.services.storage.business.StorageResourceManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

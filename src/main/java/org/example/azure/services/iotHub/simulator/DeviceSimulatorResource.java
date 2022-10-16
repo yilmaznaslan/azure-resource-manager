@@ -1,4 +1,4 @@
-package org.example.azure.resources.iotHub.simulator;
+package org.example.azure.services.iotHub.simulator;
 
 import com.codahale.metrics.annotation.Timed;
 import com.microsoft.azure.sdk.iot.device.exceptions.IotHubClientException;

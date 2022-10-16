@@ -1,9 +1,5 @@
-package org.example.azure.resources.storage.business;
+package org.example.azure.services.storage.business;
 
-import com.azure.core.management.Region;
-import com.azure.resourcemanager.AzureResourceManager;
-import com.azure.resourcemanager.storage.models.StorageAccount;
-import com.azure.resourcemanager.storage.models.StorageAccountKey;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
@@ -19,44 +15,24 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.List;
 
-public class StorageResourceManager {
+public class StorageBA {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(StorageResourceManager.class);
-    public static String storageConnectionString;
-    private final AzureResourceManager azureResourceManager;
-    private final String resourceGroupName;
-    private String storageAccountName = "storagetestyilmaz";
-    private String containerName = "devicecontainer";
+    private static Logger LOGGER = LoggerFactory.getLogger(StorageBA.class);
     private CloudBlobContainer container;
+    private final String storageConnectionString;
 
-    public StorageResourceManager(String resourceGroupName, AzureResourceManager azureResourceManager) throws URISyntaxException, InvalidKeyException, StorageException {
-        this.azureResourceManager = azureResourceManager;
-        this.resourceGroupName = resourceGroupName;
-    }
-
-    public void createStorageAccountAndContainer(String storageAccountName, String containerName) throws StorageException, URISyntaxException, InvalidKeyException {
-        LOGGER.info("Creating a storage account");
-        this.storageAccountName = storageAccountName;
-        this.containerName = containerName;
-        StorageAccount storageAccount = azureResourceManager.storageAccounts().define(storageAccountName)
-                .withRegion(Region.US_EAST)
-                .withNewResourceGroup(resourceGroupName)
-                .create();
-
-
-        // get a list of storage account keys related to the account
-        List<StorageAccountKey> storageAccountKeys = storageAccount.getKeys();
-        for (StorageAccountKey key : storageAccountKeys) {
-            System.out.println("Key name: " + key.keyName() + " with value " + key.value());
+    public StorageBA(String storageConnectionString ) {
+        this.storageConnectionString = storageConnectionString;
+        try {
+            createStorageContainer("iothubcontainer");
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        } catch (StorageException e) {
+            throw new RuntimeException(e);
         }
-
-
-
-        this.storageConnectionString = "DefaultEndpointsProtocol=https;AccountName="+storageAccountName+";AccountKey="+storageAccountKeys.get(0).value()+";EndpointSuffix=core.windows.net";
-
-        createStorageContainer(containerName);
     }
 
     public void createStorageContainer(String containerName) throws URISyntaxException, InvalidKeyException, StorageException {

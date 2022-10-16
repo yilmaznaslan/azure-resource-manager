@@ -1,22 +1,23 @@
-package org.example.azure.resources.iotHub.devicemanagement.business;
+package org.example.azure.services.iotHub.devicemanagement.business;
 
 import com.azure.core.util.Context;
 import com.azure.resourcemanager.iothub.IotHubManager;
 import com.azure.resourcemanager.iothub.models.ExportDevicesRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.azure.sdk.iot.service.twin.Twin;
-import com.microsoft.azure.sdk.iot.service.twin.TwinClient;
-import com.microsoft.azure.sdk.iot.service.twin.TwinCollection;
 import com.microsoft.azure.sdk.iot.service.auth.AuthenticationMechanism;
 import com.microsoft.azure.sdk.iot.service.auth.AuthenticationType;
 import com.microsoft.azure.sdk.iot.service.exceptions.IotHubException;
+import com.microsoft.azure.sdk.iot.service.query.QueryClient;
+import com.microsoft.azure.sdk.iot.service.query.TwinQueryResponse;
 import com.microsoft.azure.sdk.iot.service.registry.*;
+import com.microsoft.azure.sdk.iot.service.twin.Twin;
+import com.microsoft.azure.sdk.iot.service.twin.TwinClient;
+import com.microsoft.azure.sdk.iot.service.twin.TwinCollection;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.azure.storage.blob.ListBlobItem;
-import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
-import org.example.azure.resources.storage.business.StorageBA;
+import org.example.azure.services.storage.business.StorageBA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,15 +38,14 @@ public class DeviceManagementBA {
     private static boolean excludeKeys = false;
     private static String importBlobName = "devices.txt";
     private final IotHubManager iotHubManager;
-    private final IoTHubBA ioTHubBA;
 
     private final String iotHubConnectionString;
     private final StorageBA storageBA;
     private final String resourceGroupName;
+    private final String GET_ALL_DEVICES = "SELECT * FROM devices";
 
-    public DeviceManagementBA(IotHubManager iotHubManager, IoTHubBA ioTHubBA, StorageBA storageBA, String resourceGroupName, String iotHubConnectionString) {
+    public DeviceManagementBA(IotHubManager iotHubManager, StorageBA storageBA, String resourceGroupName, String iotHubConnectionString) {
         this.iotHubManager = iotHubManager;
-        this.ioTHubBA = ioTHubBA;
         this.storageBA = storageBA;
         this.resourceGroupName = resourceGroupName;
         this.iotHubConnectionString = iotHubConnectionString;
@@ -63,17 +63,42 @@ public class DeviceManagementBA {
     }
 
 
-    public void patchDeviceTwin(String deviceId) throws IOException, IotHubException {
+    public HashMap<String, Twin> getDeviceTwins() throws IOException, IotHubException {
+        LOGGER.info("Getting all device twins");
+        QueryClient queryClient = new QueryClient(iotHubConnectionString);
+        TwinQueryResponse response = queryClient.queryTwins(GET_ALL_DEVICES);
+        HashMap<String, Twin> twins = new HashMap<>();
+        while (response.hasNext()) {
+            Twin twin = response.next();
+            LOGGER.info("Getting deviceId: {}", twin.getDeviceId());
+            twins.put(twin.getDeviceId(), twin);
+        }
+        return twins;
+    }
 
+
+    public void deleteDeviceTwins() throws IOException, IotHubException {
+        HashMap<String, Twin> devices = getDeviceTwins();
+        RegistryClient registryClient = new RegistryClient(iotHubConnectionString);
+        devices.forEach((k, v) -> {
+            try {
+                registryClient.removeDevice(k);
+                LOGGER.info("Deleting deviceId: {}",k);
+            } catch (IOException | IotHubException e) {
+                LOGGER.error("Failed to remove device: {}Reason: . Exception: {}", k, e.getCause(), e);
+            }
+        });
+    }
+
+
+    public void patchDeviceTwin(String deviceId) throws IOException, IotHubException {
         TwinClient twinClient = new TwinClient(iotHubConnectionString);
         Twin twin = twinClient.get(deviceId);
-        TwinCollection twinCollection = new TwinCollection();
+        TwinCollection twinCollection = twin.getTags();
         twinCollection.put("customerId", "null");
         twinCollection.put("country", "germany");
         twinCollection.put("SoftwareId", "xe123");
-        twin.setTags(twinCollection);
         twinClient.patch(twin);
-
     }
 
     public void registerSingleDevice(String deviceId) {
@@ -84,7 +109,7 @@ public class DeviceManagementBA {
             device = registryClient.addDevice(device);
             System.out.println("Device created: " + device.getDeviceId());
             System.out.println("Device key: " + device.getPrimaryKey());
-            HashMap<String, String> tags  = new HashMap<String, String>();
+            HashMap<String, String> tags = new HashMap<String, String>();
             tags.put("countery", "germany");
             patchDeviceTwin(device.getDeviceId());
 
@@ -144,7 +169,7 @@ public class DeviceManagementBA {
             twinCollection.put("customerId", "null");
             twinCollection.put("country", "germany");
             twinCollection.put("SoftwareId", "xe123");
-            deviceToAdd.setTags(twinCollection);
+
             String deviceId = devicePrefix + "_" + i;
 
 
@@ -164,7 +189,12 @@ public class DeviceManagementBA {
                 deviceToAdd.setAuthentication(authentication);
             }
 
-            //deviceToAdd.setDesiredProperties();
+            deviceToAdd.setTags(twinCollection);
+            //
+            TwinCollection desiredProperties = new TwinCollection();
+            desiredProperties.put("fanSpeed", 10);
+            desiredProperties.put("mode", "ON");
+            deviceToAdd.setDesiredProperties(desiredProperties);
             deviceToAdd.setId(deviceId);
             deviceToAdd.setStatus(DeviceStatus.Enabled);
             deviceToAdd.setImportMode(ImportMode.CreateOrUpdate);

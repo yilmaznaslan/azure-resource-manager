@@ -1,4 +1,4 @@
-package org.example.azure.resources.iotHub.resourceManager.business;
+package org.example.azure.services.iotHub.resourceManager.business;
 
 import com.azure.core.management.Region;
 import com.azure.resourcemanager.AzureResourceManager;

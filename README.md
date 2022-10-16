@@ -67,7 +67,8 @@ There are multiple ways to monitor device telemetry data
 ##
 ![Azure Role Assignment](https://docs.microsoft.com/en-us/azure/includes/role-based-access-control/media/scope-levels.png)
 
-
+## Notes
+- Registering devices in bulk takes around *20 seconds* when device count is *1000*. Whereas deleting devices one-by-one takes around *7 minutes*
 
 ## Reference
 - https://docs.microsoft.com/en-us/java/api/overview/azure/resourcemanager-iothub-readme?view=azure-java-stable

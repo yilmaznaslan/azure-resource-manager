@@ -10,16 +10,16 @@ import com.azure.resourcemanager.iothub.IotHubManager;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import org.example.azure.config.DefaultConfiguration;
-import org.example.azure.resources.iotHub.resourceManager.business.IoTHubResourceManager;
-import org.example.azure.resources.iotHub.devicemanagement.business.DeviceManagementBA;
-import org.example.azure.resources.iotHub.devicemanagement.service.DeviceManagementService;
-import org.example.azure.resources.iotHub.resourceManager.business.IoTHubBA;
-import org.example.azure.resources.iotHub.resourceManager.service.IoTHubResource;
-import org.example.azure.resources.storage.business.StorageBA;
-import org.example.azure.resources.storage.business.StorageResourceManager;
-import org.example.azure.resources.storage.service.StorageResource;
-import org.example.azure.resources.iotHub.simulator.DeviceBA;
-import org.example.azure.resources.iotHub.simulator.DeviceSimulatorResource;
+import org.example.azure.services.iotHub.resourceManager.business.IoTHubResourceManager;
+import org.example.azure.services.iotHub.devicemanagement.business.DeviceManagementBA;
+import org.example.azure.services.iotHub.devicemanagement.service.DeviceManagementService;
+import org.example.azure.services.iotHub.resourceManager.business.IoTHubBA;
+import org.example.azure.services.iotHub.resourceManager.service.IoTHubResource;
+import org.example.azure.services.storage.business.StorageBA;
+import org.example.azure.services.storage.business.StorageResourceManager;
+import org.example.azure.services.storage.service.StorageResource;
+import org.example.azure.services.iotHub.simulator.DeviceBA;
+import org.example.azure.services.iotHub.simulator.DeviceSimulatorResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public class MainApplication extends Application<DefaultConfiguration> {
         String resourceGroupName = configuration.getIotHubResourceGroupName();
         IoTHubBA ioTHubBA = new IoTHubBA(credential, profile);
         StorageBA storageBA = new StorageBA(STORAGE_ACCOUNT_CONNECTION_STRING);
-        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, ioTHubBA, storageBA, resourceGroupName, IOTHUB_CONNECTION_STRING);
+        DeviceManagementBA deviceManagementBA = new DeviceManagementBA(iotHubManager, storageBA, resourceGroupName, IOTHUB_CONNECTION_STRING);
         DeviceBA deviceBA = new DeviceBA();
 
         StorageResourceManager storageResourceManager = new StorageResourceManager(resourceGroupName, azureResourceManager);
@@ -77,5 +77,12 @@ public class MainApplication extends Application<DefaultConfiguration> {
         environment.jersey().register(deviceManagementService);
         environment.jersey().register(storageResource);
 
+    }
+
+    private boolean isIoTHubConnectionStringValidated(){
+        if (IOTHUB_CONNECTION_STRING == null){
+            return false;
+        }
+        return true;
     }
 }

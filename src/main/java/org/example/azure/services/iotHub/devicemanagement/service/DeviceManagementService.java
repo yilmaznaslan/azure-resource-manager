@@ -1,10 +1,12 @@
-package org.example.azure.resources.iotHub.devicemanagement.service;
+package org.example.azure.services.iotHub.devicemanagement.service;
 
 import com.codahale.metrics.annotation.Timed;
-import org.example.azure.resources.iotHub.devicemanagement.business.DeviceManagementBA;
+import com.microsoft.azure.sdk.iot.service.twin.Twin;
+import org.example.azure.services.iotHub.devicemanagement.business.DeviceManagementBA;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.HashMap;
 
 @Path("iothub/{iotHubName}/devices")
 @Produces(MediaType.APPLICATION_JSON)
@@ -16,7 +18,7 @@ public class DeviceManagementService {
         this.deviceManagementBA = deviceManagementBA;
     }
 
-    //@POST
+    @POST
     @Timed
     public void registerDevicesInBulk(@PathParam("iotHubName") String iotHubName,
                                       @QueryParam("devicePrefix") String devicePrefix,
@@ -25,7 +27,7 @@ public class DeviceManagementService {
         deviceManagementBA.createAndRegisterDevicesToIotHub(iotHubName,devicePrefix, deviceCount, authenticationType);
     }
 
-    @POST
+    //@POST
     @Timed
     public void registerSingleDevice(@QueryParam("deviceId") String deviceId) throws Exception {
         deviceManagementBA.registerSingleDevice(deviceId);
@@ -34,7 +36,14 @@ public class DeviceManagementService {
 
     @GET
     @Timed
-    public void getDevices(@PathParam("iotHubName") String iotHubName) throws Exception {
-        deviceManagementBA.getDevicesFromIotHubToBlob(iotHubName);
+    public HashMap<String, Twin> getDevices(@PathParam("iotHubName") String iotHubName) throws Exception {
+        //deviceManagementBA.getDevicesFromIotHubToBlob(iotHubName);
+        return deviceManagementBA.getDeviceTwins();
+    }
+
+    @DELETE
+    @Timed
+    public void deleteDevices(@PathParam("iotHubName") String iotHubName) throws Exception {
+        deviceManagementBA.deleteDeviceTwins();
     }
 }
